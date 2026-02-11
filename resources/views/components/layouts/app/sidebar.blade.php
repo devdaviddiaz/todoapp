@@ -127,6 +127,12 @@
 
         {{ $slot }}
 
+        {{-- Librerías globales --}}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        {{-- Scripts específicos de vistas --}}
+        @stack('scripts')
+
         @fluxScripts
     </body>
 </html>

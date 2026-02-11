@@ -6,12 +6,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Task;
 use App\Models\Project;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
+
+        /*dd(
+            get_class($user),
+            method_exists($user, 'projects'),
+            $user->projects()->count()
+        );*/
 
         $projects = $user->projects()->withCount('tasks')->get();
 
@@ -22,7 +29,7 @@ class DashboardController extends Controller
         ->get()
         ->groupBy('status.name');
 
-        return view('dashboard.index', compact(
+        return view('dashboard', compact(
             'projects',
             'tasksByStatus'
         ));

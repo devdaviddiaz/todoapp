@@ -5,15 +5,24 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectController;
 
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', [DashboardController::class, 'dashboard'])
+/*Route::view('dashboard', [DashboardController::class, 'dashboard'])
     ->middleware(['auth', 'verified'])
+    ->name('dashboard');*/
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware('auth')
     ->name('dashboard');
+
+Route::middleware('auth')->group(function() {
+    Route::resource('projects', ProjectController::class);
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
