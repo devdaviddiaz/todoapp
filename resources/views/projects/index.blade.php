@@ -12,24 +12,95 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @forelse($projects as $project)
-                <a
-                    href="{{ route('projects.show', $project) }}"
-                    class="block bg-white rounded-xl shadow p-6 hover:shadow-lg transition"
-                >
-                    <h3 class="font-bold text-lg mb-2">
-                        {{ $project->name }}
-                    </h3>
-
-                    <p class="text-gray-600 text-sm">
-                        {{ $project->description ?? 'Sin descripción' }}
-                    </p>
-                </a>
-            @empty
-                <p>No tienes proyectos todavía 🥺</p>
-            @endforelse
-        </div>
+        <x-projects.grid-card-project :projects="$projects" ></x-projects.grid-card-project>
 
     </div>
 </x-layouts.app>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Mostrar toast si hay mensaje
+        let successMessage = sessionStorage.getItem('success-toast');
+        if (successMessage) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: successMessage,
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'custom-toast'
+                }
+            });
+            sessionStorage.removeItem('success-toast');
+        }
+    });
+    
+    // Manejar múltiples formularios de eliminación
+    let deleteForms = document.querySelectorAll('.form-delete');
+
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action will delete the post. 💔",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(form.action, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            _method: 'DELETE'
+                        })
+                    })
+                    .then(response => {
+                        if (response.status === 422) {
+                            return response.json().then(data => {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: 'Something went wrong 💔',
+                                    showConfirmButton: false,
+                                    timer: 4000,
+                                    timerProgressBar: true,
+                                    customClass: {
+                                        popup: 'custom-toast'
+                                    }
+                                });
+                            });
+                        } else if (response.ok) {
+                            return response.json().then(data => {
+                                sessionStorage.setItem('success-toast', data.message);
+                                window.location.href = "/projects";
+                            });
+                        } else {
+                            throw new Error("Error del servidor");
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Something went wrong 😢',
+                            footer: '<a href="#">¿Necesitas ayuda?</a>'
+                        });
+                    });
+                }
+            });
+        });
+    });
+</script>
